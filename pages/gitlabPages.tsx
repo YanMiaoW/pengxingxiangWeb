@@ -22,6 +22,7 @@ const theme = createTheme({
     },
 });
 
+const GITLAB_SERVER = 'https://gitlab.com'
 const ACCESS_TOKEN = 'glpat-TsJvbzMCF-2YdeeLbQjG'
 const REPOID = '35295332'
 const BRANCH = 'main'
@@ -51,7 +52,7 @@ export default function MarkdownTest() {
     }
 
     useEffect(() => {
-        gitlabRequest(ACCESS_TOKEN, REPOID)
+        gitlabRequest(GITLAB_SERVER, ACCESS_TOKEN, REPOID)
             .then(navi => {
                 setNavi(navi)
             })

@@ -11,11 +11,11 @@ import FolderNavigator from '../components/FolderNavigator';
 import { useRouter } from 'next/router'
 import { giteaRequest, loadMarkdown } from './api/giteaPaths';
 
-const GIT_SERVER = 'http://192.168.1.55:9001'
-const ACCESS_TOKEN = '46647576f6a048ee8ac4814c8448e7478804a679'
-const REPO = 'auroDoc'
+const GIT_SERVER = 'https://try.gitea.io'
+const ACCESS_TOKEN = 'b718cd9bca25a4be9bc6a4026fcd8ccb867e47e5'
+const REPO = 'test'
 const BRANCH = 'main'
-const OWNER = 'pengxingxiang'
+const OWNER = 'YanMiaoW'
 
 export default function MarkdownTest() {
     const [content, setContent] = useState('')
@@ -27,15 +27,15 @@ export default function MarkdownTest() {
 
     function handerClick(file: any) {
         const { sha, key } = file
-
-        loadMarkdown(GIT_SERVER, ACCESS_TOKEN, OWNER, REPO, sha).then(content => {
+        
+        loadMarkdown(GIT_SERVER,ACCESS_TOKEN, OWNER, REPO, sha).then(content => {
             setContent(content)
         })
 
         setSelectKey(key)
 
         router.push({
-            pathname: '/',
+            pathname: '/giteaPages',
             query: { sha },
         })
 
@@ -53,7 +53,7 @@ export default function MarkdownTest() {
         if (router.isReady) {
             const { sha } = router.query
             if (sha) {
-                loadMarkdown(GIT_SERVER, ACCESS_TOKEN, OWNER, REPO, sha).then(content => {
+                loadMarkdown(GIT_SERVER,ACCESS_TOKEN, OWNER, REPO, sha).then(content => {
                     setContent(content)
                 })
             }

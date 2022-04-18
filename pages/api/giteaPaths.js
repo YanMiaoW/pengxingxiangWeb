@@ -1,10 +1,8 @@
 
-export async function gitlabRequest(gitlabServer,access_token, repoID) {
+export async function giteaRequest(giteaServer, access_token, owner, repo, branch) {
+    // console.log(giteaServer, access_token, owner, repo, branch);
     let response
-    response = await fetch(`${gitlabServer}/api/v4/projects/${repoID}/repository/tree?`+ new URLSearchParams({
-        recursive: true,
-        per_page: 10000,
-    }), {
+    response = await fetch(`${giteaServer}/api/v1/repos/${owner}/${repo}/branches/${branch}`,{
         headers: {
             Authorization: `Bearer ${access_token}`
         }
@@ -12,9 +10,24 @@ export async function gitlabRequest(gitlabServer,access_token, repoID) {
 
     const branchTree = await response.json()
 
+    const lastBranchCommitSha = branchTree.commit.id
+
+    response = await fetch(`${giteaServer}/api/v1/repos/${owner}/${repo}/git/trees/${lastBranchCommitSha}?`+ new URLSearchParams({
+        recursive: true,
+        per_page: 10000,
+    }),{
+        headers: {
+            Authorization: `Bearer ${access_token}`
+        }
+    })
+
+    const treeResponse = await response.json()
+
+    const trees = treeResponse.tree
+
     const data = []
 
-    for (let tree of branchTree) {
+    for (let tree of trees) {
         if (tree.type != 'tree') continue
         // console.log(tree);
         const splits = tree.path.split('/')
@@ -27,7 +40,7 @@ export async function gitlabRequest(gitlabServer,access_token, repoID) {
                 const newFolder = {
                     name: folderName,
                     value: [],
-                    key: tree.id
+                    key: tree.sha
                 }
                 currentFolder.push(newFolder)
                 currentFolder = newFolder.value
@@ -37,7 +50,7 @@ export async function gitlabRequest(gitlabServer,access_token, repoID) {
         }
     }
 
-    for (let tree of branchTree) {
+    for (let tree of trees) {
         if (tree.type != 'blob') continue
         const splits = tree.path.split('/')
         const filename = splits[splits.length - 1]
@@ -54,9 +67,9 @@ export async function gitlabRequest(gitlabServer,access_token, repoID) {
         // console.log(tree.path);
 
         currentFolder.push({
-            path: tree.path,
+            sha: tree.sha,
             name,
-            key: tree.id
+            key: tree.sha
         })
 
         // console.log(tree);
@@ -65,10 +78,9 @@ export async function gitlabRequest(gitlabServer,access_token, repoID) {
     return data
 }
 
-export async function loadMarkdown(access_token, repoID, ref, path) {
+export async function loadMarkdown(giteaServer, access_token, owner, repo, sha) {
     let response
-    const pathEncode = encodeURIComponent(path)
-    response = await fetch(`https://gitlab.com/api/v4/projects/${repoID}/repository/files/${pathEncode}?ref=${ref}`, {
+    response = await fetch(`${giteaServer}/api/v1/repos/${owner}/${repo}/git/blobs/${sha}?`,{
         headers: {
             Authorization: `Bearer ${access_token}`
         }
@@ -81,19 +93,23 @@ export async function loadMarkdown(access_token, repoID, ref, path) {
     return content
 
 }
+
 export default function handler(req, res) {
 
-    const ACCESS_TOKEN = 'glpat-TsJvbzMCF-2YdeeLbQjG'
-    const REPOID = '35295332'
+    const GIT_SERVER = 'https://try.gitea.io'
+    const ACCESS_TOKEN = 'b718cd9bca25a4be9bc6a4026fcd8ccb867e47e5'
+    const REPO = 'test'
     const BRANCH = 'main'
+    const OWNER = 'YanMiaoW'
 
-    gitlabRequest(ACCESS_TOKEN, REPOID)
+    giteaRequest(GIT_SERVER, ACCESS_TOKEN, OWNER, REPO, BRANCH)
         .then(data => {
             // console.log(data);
-            const file = data[6]
+            const file = data[3]
             // console.log(file);
-            loadMarkdown(ACCESS_TOKEN, REPOID, BRANCH, file.path)
+            loadMarkdown(GIT_SERVER,ACCESS_TOKEN, OWNER, REPO, file.sha)
                 .then(content => {
+                    // console.log(content);
                     res.statusCode = 200
                     res.json(content);
                 })
