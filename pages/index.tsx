@@ -9,13 +9,23 @@ import Drawer from '@mui/material/Drawer';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import FolderNavigator from '../components/FolderNavigator';
 import { useRouter } from 'next/router'
-import { giteaRequest, loadMarkdown } from './api/giteaPaths';
+import { gitlabRequest, loadMarkdown } from './api/gitlabPaths';
 
-const GIT_SERVER = 'http://192.168.1.55:9001'
-const ACCESS_TOKEN = '46647576f6a048ee8ac4814c8448e7478804a679'
-const REPO = 'auroDoc'
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: "#f22f27",
+        },
+        secondary: {
+            main: "#262626"
+        }
+    },
+});
+
+const GITLAB_SERVER = 'https://gitlab.com'
+const ACCESS_TOKEN = 'glpat-xUsHNypQxJ_Vbr1iTyUP'
+const REPOID = '35837994'
 const BRANCH = 'main'
-const OWNER = 'pengxingxiang'
 
 export default function MarkdownTest() {
     const [content, setContent] = useState('')
@@ -26,9 +36,9 @@ export default function MarkdownTest() {
     const router = useRouter()
 
     function handerClick(file: any) {
-        const { sha, key } = file
-
-        loadMarkdown(GIT_SERVER, ACCESS_TOKEN, OWNER, REPO, sha).then(content => {
+        const { path, key } = file
+        
+        loadMarkdown(ACCESS_TOKEN, REPOID, BRANCH, path).then(content => {
             setContent(content)
         })
 
@@ -36,13 +46,13 @@ export default function MarkdownTest() {
 
         router.push({
             pathname: '/',
-            query: { sha },
+            query: { path },
         })
 
     }
 
     useEffect(() => {
-        giteaRequest(GIT_SERVER, ACCESS_TOKEN, OWNER, REPO, BRANCH)
+        gitlabRequest(GITLAB_SERVER, ACCESS_TOKEN, REPOID)
             .then(navi => {
                 setNavi(navi)
             })
@@ -51,9 +61,9 @@ export default function MarkdownTest() {
 
     useEffect(() => {
         if (router.isReady) {
-            const { sha } = router.query
-            if (sha) {
-                loadMarkdown(GIT_SERVER, ACCESS_TOKEN, OWNER, REPO, sha).then(content => {
+            const { path } = router.query
+            if (path) {
+                loadMarkdown(ACCESS_TOKEN, REPOID, BRANCH, path).then(content => {
                     setContent(content)
                 })
             }
